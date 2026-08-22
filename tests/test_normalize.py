@@ -75,6 +75,5 @@ def test_unique_shop_aggregation() -> None:
     )
     assert len(shops) == 1
     assert shops[0].listing_ids == ["111", "222"]
-    assert shops[0].active_listing_count == 2
+    assert shops[0].active_listing_count == 1
     assert shops[0].review_count == 42
-

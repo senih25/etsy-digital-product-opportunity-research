@@ -6,7 +6,7 @@ This repository is the canonical source for deterministic analysis of publicly a
 
 Current research question:
 
-- RQ2 - Can new or low-review shops gain visibility in relevant Etsy digital-product tool categories?
+- RQ2 - Can new or low-review shops appear in Etsy Open API keyword-relevance results for relevant digital-product tool categories?
 
 Research topics:
 
@@ -38,7 +38,7 @@ Data source policy:
 
 Important:
 
-- API ordering must not be represented as user-visible Etsy SERP ranking unless the official API explicitly defines it that way.
+- API rank != user-visible Etsy rank. Treat this as API Search Entry Signal, not SERP visibility unless the official API explicitly defines it that way.
 - Live pilot is blocked until local Etsy API credentials are present.
 - `ETSY_API_KEYSTRING` and `ETSY_SHARED_SECRET` are required for live preflight and future campaign runs.
 - The Etsy `x-api-key` header is composed as `keystring:shared_secret`.

@@ -48,6 +48,19 @@ def test_find_all_listings_active_supports_keywords_limit_offset() -> None:
     ]
 
 
+def test_get_shop_uses_shop_path() -> None:
+    client = _RecordingClient()
+    client.get_shop("12345")
+
+    assert client.calls == [
+        (
+            "GET",
+            "/shops/12345",
+            None,
+        )
+    ]
+
+
 def test_iter_active_listings_paginates_until_short_page() -> None:
     class PaginatingClient(EtsyClient):
         def __init__(self) -> None:

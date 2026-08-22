@@ -4,8 +4,12 @@ from contextlib import nullcontext
 
 import pytest
 
-from etsy_research.cli import preflight_command
-from etsy_research.config import detect_etsy_credential_state, load_etsy_credentials
+from etsy_research.cli import preflight_command, run_rq2_command
+from etsy_research.config import (
+    detect_etsy_app_approval_state,
+    detect_etsy_credential_state,
+    load_etsy_credentials,
+)
 from etsy_research.etsy_client import EtsyClient, EtsyClientError, RequestMetadata, compose_x_api_key, redact_headers
 
 
@@ -29,6 +33,20 @@ def test_redaction_masks_authorization_without_token_hint() -> None:
     headers = {"Authorization": "Bearer 12345678.token"}
     redacted = redact_headers(headers)
     assert redacted["Authorization"] == "[REDACTED]"
+
+
+@pytest.mark.parametrize(
+    ("environ", "expected"),
+    [
+        ({}, "PENDING"),
+        ({"ETSY_APP_APPROVAL": "APPROVED"}, "APPROVED"),
+        ({"ETSY_APP_APPROVAL": "pending"}, "PENDING"),
+        ({"ETSY_APP_APPROVED": "true"}, "APPROVED"),
+        ({"ETSY_APP_APPROVED": "false"}, "PENDING"),
+    ],
+)
+def test_detect_app_approval_state(environ: dict[str, str], expected: str) -> None:
+    assert detect_etsy_app_approval_state(environ) == expected
 
 
 @pytest.mark.parametrize(
@@ -59,6 +77,7 @@ def test_explicit_empty_env_mapping_is_respected(monkeypatch: pytest.MonkeyPatch
 
 
 def test_preflight_missing_credentials(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    monkeypatch.setenv("ETSY_APP_APPROVAL", "APPROVED")
     monkeypatch.delenv("ETSY_API_KEYSTRING", raising=False)
     monkeypatch.delenv("ETSY_SHARED_SECRET", raising=False)
 
@@ -70,6 +89,7 @@ def test_preflight_missing_credentials(monkeypatch: pytest.MonkeyPatch, capsys: 
 
 
 def test_preflight_missing_shared_secret(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    monkeypatch.setenv("ETSY_APP_APPROVAL", "APPROVED")
     monkeypatch.setenv("ETSY_API_KEYSTRING", "keystring")
     monkeypatch.delenv("ETSY_SHARED_SECRET", raising=False)
 
@@ -81,6 +101,7 @@ def test_preflight_missing_shared_secret(monkeypatch: pytest.MonkeyPatch, capsys
 
 
 def test_preflight_missing_keystring(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    monkeypatch.setenv("ETSY_APP_APPROVAL", "APPROVED")
     monkeypatch.delenv("ETSY_API_KEYSTRING", raising=False)
     monkeypatch.setenv("ETSY_SHARED_SECRET", "shared-secret")
 
@@ -92,17 +113,14 @@ def test_preflight_missing_keystring(monkeypatch: pytest.MonkeyPatch, capsys: py
 
 
 def test_preflight_app_not_approved(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    monkeypatch.setenv("ETSY_APP_APPROVAL", "PENDING")
     monkeypatch.setenv("ETSY_API_KEYSTRING", "keystring")
     monkeypatch.setenv("ETSY_SHARED_SECRET", "shared-secret")
 
-    def fake_find_all_listings_active(self: EtsyClient, **_: object) -> tuple[object, RequestMetadata]:
-        raise EtsyClientError(
-            "Etsy API request failed with status 403",
-            status_code=403,
-            response_text="application pending approval",
-        )
+    def fail_if_called(self: EtsyClient, **_: object) -> tuple[object, RequestMetadata]:
+        pytest.fail("live Etsy API call should not be attempted before app approval")
 
-    monkeypatch.setattr(EtsyClient, "find_all_listings_active", fake_find_all_listings_active)
+    monkeypatch.setattr(EtsyClient, "find_all_listings_active", fail_if_called)
 
     exit_code = preflight_command()
     out = capsys.readouterr().out.strip()
@@ -112,6 +130,7 @@ def test_preflight_app_not_approved(monkeypatch: pytest.MonkeyPatch, capsys: pyt
 
 
 def test_preflight_auth_failed(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    monkeypatch.setenv("ETSY_APP_APPROVAL", "APPROVED")
     monkeypatch.setenv("ETSY_API_KEYSTRING", "keystring")
     monkeypatch.setenv("ETSY_SHARED_SECRET", "shared-secret")
 
@@ -128,6 +147,7 @@ def test_preflight_auth_failed(monkeypatch: pytest.MonkeyPatch, capsys: pytest.C
 
 
 def test_preflight_success(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    monkeypatch.setenv("ETSY_APP_APPROVAL", "APPROVED")
     monkeypatch.setenv("ETSY_API_KEYSTRING", "keystring")
     monkeypatch.setenv("ETSY_SHARED_SECRET", "shared-secret")
 
@@ -146,3 +166,15 @@ def test_preflight_success(monkeypatch: pytest.MonkeyPatch, capsys: pytest.Captu
     assert '"status": "PASS"' in out
     assert '"operation": "findAllListingsActive"' in out
     assert '"x-api-key = keystring:shared_secret"' in out
+
+
+def test_run_rq2_app_not_approved(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    monkeypatch.setenv("ETSY_APP_APPROVAL", "PENDING")
+    monkeypatch.setenv("ETSY_API_KEYSTRING", "keystring")
+    monkeypatch.setenv("ETSY_SHARED_SECRET", "shared-secret")
+
+    exit_code = run_rq2_command()
+    out = capsys.readouterr().out.strip()
+
+    assert exit_code == 2
+    assert out == "BLOCKED_APP_NOT_APPROVED"

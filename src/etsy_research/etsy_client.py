@@ -200,6 +200,12 @@ class EtsyClient:
     def get_active_listings(self, **params: Any) -> tuple[Any, RequestMetadata]:
         return self.find_all_listings_active(**params)
 
+    def get_shop(self, shop_id: str | int) -> tuple[Any, RequestMetadata]:
+        path_segment = str(shop_id).strip()
+        if not path_segment:
+            raise ValueError("shop_id is required")
+        return self._request_json("GET", f"/shops/{path_segment}")
+
     def iter_active_listings(self, *, limit: int = 100, **params: Any):
         offset = 0
         while True:

@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class _ResearchBaseModel(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
 
 class ResearchRun(_ResearchBaseModel):
@@ -74,11 +74,28 @@ class CanonicalShop(_ResearchBaseModel):
     shop_id: str
     shop_name: str | None = None
     review_count: int | None = None
-    sales_count: int | None = None
-    shop_created_at: datetime | None = None
-    active_listing_count: int | None = None
+    review_average: float | None = None
+    transaction_sold_count: int | None = Field(default=None, alias="sales_count")
+    created_timestamp: datetime | None = Field(default=None, alias="shop_created_at")
+    listing_active_count: int | None = Field(default=None, alias="active_listing_count")
+    digital_listing_count: int | None = None
+    num_favorers: int | None = None
+    source_endpoint: str | None = None
+    retrieved_at: datetime | None = None
     maturity_source: str
     listing_ids: list[str] = Field(default_factory=list)
+
+    @property
+    def sales_count(self) -> int | None:
+        return self.transaction_sold_count
+
+    @property
+    def shop_created_at(self) -> datetime | None:
+        return self.created_timestamp
+
+    @property
+    def active_listing_count(self) -> int | None:
+        return self.listing_active_count
 
 
 class PriceSummary(_ResearchBaseModel):
@@ -162,4 +179,3 @@ class ResearchVerdict(_ResearchBaseModel):
     live_data_available: bool = True
     missing_metrics: list[str] = Field(default_factory=list)
     evidence: list[str] = Field(default_factory=list)
-

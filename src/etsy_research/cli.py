@@ -7,7 +7,13 @@ from pathlib import Path
 from typing import Any
 
 from .analyze import build_query_metrics
-from .config import detect_etsy_credential_state, load_config_bundle, load_etsy_credentials, load_local_env
+from .config import (
+    detect_etsy_app_approval_state,
+    detect_etsy_credential_state,
+    load_config_bundle,
+    load_etsy_credentials,
+    load_local_env,
+)
 from .etsy_client import EtsyClient, EtsyClientError
 from .models import CanonicalShop, RawObservation
 
@@ -36,6 +42,25 @@ def validate_config_command() -> int:
             "version": bundle.thresholds.version,
             "rank_windows": bundle.thresholds.rank_windows,
         },
+    }
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0
+
+
+def estimate_rq2_budget_command() -> int:
+    bundle = load_config_bundle()
+    search_calls = sum(1 for query in bundle.queries.queries if query.enabled)
+    max_rank_window = max(bundle.thresholds.rank_windows) if bundle.thresholds.rank_windows else 0
+    unique_shop_calls = search_calls * max_rank_window
+    total_estimated_calls = search_calls + unique_shop_calls
+    qpd_limit = 5000
+    payload = {
+        "status": "PASS",
+        "search_calls": search_calls,
+        "unique_shop_calls": unique_shop_calls,
+        "total_estimated_calls": total_estimated_calls,
+        "QPD_LIMIT": qpd_limit,
+        "estimated_usage_percentage": round((total_estimated_calls / qpd_limit) * 100, 2) if qpd_limit else None,
     }
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0
@@ -71,6 +96,10 @@ def analyze_fixture_command(path: Path) -> int:
 
 def preflight_command() -> int:
     load_local_env()
+    if detect_etsy_app_approval_state() != "APPROVED":
+        print("BLOCKED_APP_NOT_APPROVED")
+        return 2
+
     bundle = load_config_bundle()
     state = detect_etsy_credential_state()
     if state != "READY":
@@ -111,6 +140,10 @@ def preflight_command() -> int:
 
 def run_rq2_command() -> int:
     load_local_env()
+    if detect_etsy_app_approval_state() != "APPROVED":
+        print("BLOCKED_APP_NOT_APPROVED")
+        return 2
+
     state = detect_etsy_credential_state()
     if state != "READY":
         print(state)
@@ -124,6 +157,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     subparsers.add_parser("validate-config")
+    subparsers.add_parser("estimate-rq2-budget")
 
     analyze_parser = subparsers.add_parser("analyze-fixture")
     analyze_parser.add_argument("path", type=Path)
@@ -140,6 +174,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "validate-config":
         return validate_config_command()
+    if args.command == "estimate-rq2-budget":
+        return estimate_rq2_budget_command()
     if args.command == "analyze-fixture":
         return analyze_fixture_command(args.path)
     if args.command == "preflight":

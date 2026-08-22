@@ -103,19 +103,19 @@ def build_canonical_shops(
                 shop_id=listing.shop_id,
                 shop_name=None,
                 review_count=None,
-                sales_count=None,
-                shop_created_at=None,
-                active_listing_count=None,
-                maturity_source="derived",
+                review_average=None,
+                transaction_sold_count=None,
+                created_timestamp=None,
+                listing_active_count=None,
+                digital_listing_count=None,
+                num_favorers=None,
+                source_endpoint=None,
+                retrieved_at=None,
+                maturity_source="derived_from_listings",
                 listing_ids=[],
             )
             shop_map[listing.shop_id] = shop
         if listing.listing_id not in shop.listing_ids:
             shop.listing_ids.append(listing.listing_id)
-        if shop.active_listing_count is None or len(shop.listing_ids) > shop.active_listing_count:
-            shop.active_listing_count = len(shop.listing_ids)
-        if shop.maturity_source == "derived" and listing.shop_id:
-            shop.maturity_source = "derived_from_listings"
 
     return list(shop_map.values())
-

@@ -133,6 +133,32 @@ def load_etsy_credentials(environ: Mapping[str, str] | None = None) -> EtsyCrede
     return EtsyCredentials(keystring=keystring, shared_secret=shared_secret)
 
 
+def detect_etsy_app_approval_state(environ: Mapping[str, str] | None = None) -> str:
+    env = os.environ if environ is None else environ
+
+    approval = env.get("ETSY_APP_APPROVAL")
+    if approval is not None:
+        value = approval.strip().upper()
+        if value == "APPROVED":
+            return "APPROVED"
+        if value in {"PENDING", "REJECTED"}:
+            return value
+        if value in {"TRUE", "YES", "1"}:
+            return "APPROVED"
+        if value in {"FALSE", "NO", "0"}:
+            return "PENDING"
+
+    legacy_approval = env.get("ETSY_APP_APPROVED")
+    if legacy_approval is not None:
+        value = legacy_approval.strip().lower()
+        if value in {"true", "yes", "1", "approved"}:
+            return "APPROVED"
+        if value in {"false", "no", "0", "pending"}:
+            return "PENDING"
+
+    return "PENDING"
+
+
 def detect_etsy_credential_state(environ: Mapping[str, str] | None = None) -> str:
     env = os.environ if environ is None else environ
     keystring = env.get("ETSY_API_KEYSTRING")

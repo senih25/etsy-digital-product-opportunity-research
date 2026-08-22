@@ -3,7 +3,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any, Iterable, Sequence
 
-from .models import QueryDefinition, RawObservation
+from .etsy_client import EtsyClient, EtsyClientError
+from .models import CanonicalShop, QueryDefinition, RawObservation
 from .normalize import normalize_listing_id
 
 
@@ -39,6 +40,11 @@ def classify_capability_status(
     return "UNKNOWN"
 
 
+def collect_unique_shop_ids(observations: Sequence[RawObservation]) -> list[str]:
+    shop_ids = {observation.shop_id for observation in observations if observation.shop_id}
+    return sorted(shop_ids)
+
+
 def _parse_datetime(value: Any) -> datetime | None:
     if value is None:
         return None
@@ -53,7 +59,8 @@ def _parse_datetime(value: Any) -> datetime | None:
         if text.endswith("Z"):
             text = text[:-1] + "+00:00"
         try:
-            return datetime.fromisoformat(text)
+            parsed = datetime.fromisoformat(text)
+            return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=UTC)
         except ValueError:
             return None
     return None
@@ -67,6 +74,31 @@ def _parse_tags(value: Any) -> list[str]:
     if isinstance(value, str):
         return [part.strip() for part in value.split(",") if part.strip()]
     return [str(value)]
+
+
+def _first_present(record: dict[str, Any], *keys: str) -> Any:
+    for key in keys:
+        if key in record and record[key] is not None:
+            return record[key]
+    return None
+
+
+def _parse_int(value: Any) -> int | None:
+    if value is None:
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _parse_float(value: Any) -> float | None:
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def _parse_price(record: dict[str, Any]) -> tuple[float | None, str | None]:
@@ -195,3 +227,68 @@ def parse_active_listing_page(
             )
         )
     return observations
+
+
+def parse_shop_record(
+    record: dict[str, Any],
+    *,
+    requested_shop_id: str | None = None,
+    retrieved_at: datetime,
+    source_endpoint: str = "getShop",
+) -> CanonicalShop:
+    shop_id = normalize_listing_id(
+        _first_present(record, "shop_id", "shopId", "user_id", "userId", requested_shop_id or "")
+    )
+    if shop_id is None:
+        raise ValueError("Missing shop_id in shop record")
+
+    return CanonicalShop(
+        shop_id=shop_id,
+        shop_name=None if (shop_name := _first_present(record, "shop_name", "shopName", "login_name")) is None else str(shop_name),
+        review_count=_parse_int(_first_present(record, "review_count")),
+        review_average=_parse_float(_first_present(record, "review_average")),
+        transaction_sold_count=_parse_int(_first_present(record, "transaction_sold_count", "sales_count")),
+        created_timestamp=_parse_datetime(_first_present(record, "created_timestamp", "create_date", "shop_created_at")),
+        listing_active_count=_parse_int(_first_present(record, "listing_active_count", "active_listing_count")),
+        digital_listing_count=_parse_int(_first_present(record, "digital_listing_count")),
+        num_favorers=_parse_int(_first_present(record, "num_favorers")),
+        source_endpoint=source_endpoint,
+        retrieved_at=retrieved_at,
+        maturity_source=source_endpoint,
+        listing_ids=[],
+    )
+
+
+def fetch_official_shops(
+    client: EtsyClient,
+    shop_ids: Sequence[str],
+    *,
+    retrieved_at: datetime | None = None,
+) -> tuple[list[CanonicalShop], list[str]]:
+    unique_shop_ids = sorted({normalize_listing_id(shop_id) for shop_id in shop_ids if normalize_listing_id(shop_id)})
+    timestamp = retrieved_at or datetime.now(UTC)
+    enriched_shops: list[CanonicalShop] = []
+    failed_shop_ids: list[str] = []
+
+    for shop_id in unique_shop_ids:
+        try:
+            payload, _metadata = client.get_shop(shop_id)
+        except EtsyClientError:
+            failed_shop_ids.append(shop_id)
+            continue
+        if not isinstance(payload, dict):
+            failed_shop_ids.append(shop_id)
+            continue
+        try:
+            enriched_shops.append(
+                parse_shop_record(
+                    payload,
+                    requested_shop_id=shop_id,
+                    retrieved_at=timestamp,
+                    source_endpoint="getShop",
+                )
+            )
+        except ValueError:
+            failed_shop_ids.append(shop_id)
+
+    return enriched_shops, failed_shop_ids

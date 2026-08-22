@@ -51,6 +51,163 @@ def assign_review_cohort(review_count: int | None, cohorts: Sequence[Mapping[str
     return None
 
 
+def assign_shop_age_bucket(created_timestamp: datetime | None, *, as_of: datetime | None = None) -> str | None:
+    if created_timestamp is None:
+        return None
+    reference = as_of or datetime.now(UTC)
+    if created_timestamp.tzinfo is None:
+        created_timestamp = created_timestamp.replace(tzinfo=UTC)
+    if reference.tzinfo is None:
+        reference = reference.replace(tzinfo=UTC)
+    age_days = (reference - created_timestamp).total_seconds() / 86400
+    if age_days < 0:
+        return None
+    if age_days < 183:
+        return "<6 months"
+    if age_days < 365:
+        return "6-12 months"
+    if age_days < 730:
+        return "1-2 years"
+    if age_days < 1825:
+        return "2-5 years"
+    return "5+ years"
+
+
+def assign_sales_maturity_bucket(transaction_sold_count: int | None) -> str | None:
+    if transaction_sold_count is None:
+        return None
+    if transaction_sold_count <= 100:
+        return "0-100"
+    if transaction_sold_count <= 500:
+        return "101-500"
+    if transaction_sold_count <= 2000:
+        return "501-2000"
+    if transaction_sold_count <= 10000:
+        return "2001-10000"
+    return "10001+"
+
+
+def _unique_shops(shops: Sequence[CanonicalShop]) -> list[CanonicalShop]:
+    unique: dict[str, CanonicalShop] = {}
+    for shop in shops:
+        if shop.shop_id not in unique:
+            unique[shop.shop_id] = shop
+    return list(unique.values())
+
+
+def calculate_low_review_shop_share(
+    shops: Sequence[CanonicalShop],
+    *,
+    review_threshold: int = 100,
+) -> float | None:
+    review_values = [shop.review_count for shop in _unique_shops(shops) if shop.review_count is not None]
+    if not review_values:
+        return None
+    low_review_count = sum(1 for value in review_values if value <= review_threshold)
+    return low_review_count / len(review_values)
+
+
+def calculate_low_sales_shop_share(
+    shops: Sequence[CanonicalShop],
+    *,
+    sales_threshold: int = 500,
+) -> float | None:
+    sales_values = [shop.transaction_sold_count for shop in _unique_shops(shops) if shop.transaction_sold_count is not None]
+    if not sales_values:
+        return None
+    low_sales_count = sum(1 for value in sales_values if value <= sales_threshold)
+    return low_sales_count / len(sales_values)
+
+
+def calculate_young_shop_share(
+    shops: Sequence[CanonicalShop],
+    *,
+    as_of: datetime | None = None,
+    young_age_days: int = 730,
+) -> float | None:
+    unique_shops = _unique_shops(shops)
+    reference = as_of or datetime.now(UTC)
+    if reference.tzinfo is None:
+        reference = reference.replace(tzinfo=UTC)
+    age_values = [
+        age_days
+        for shop in unique_shops
+        if shop.created_timestamp is not None
+        for age_days in [
+            (reference - (shop.created_timestamp if shop.created_timestamp.tzinfo is not None else shop.created_timestamp.replace(tzinfo=UTC))).total_seconds() / 86400
+        ]
+        if age_days >= 0
+    ]
+    if not age_values:
+        return None
+    young_count = sum(1 for age_days in age_values if age_days < young_age_days)
+    return young_count / len(age_values)
+
+
+def calculate_unique_low_maturity_shop_count(
+    shops: Sequence[CanonicalShop],
+    *,
+    review_threshold: int = 100,
+    sales_threshold: int = 500,
+    young_age_days: int = 730,
+    as_of: datetime | None = None,
+) -> int | None:
+    unique_shops = _unique_shops(shops)
+    evaluable = 0
+    count = 0
+    reference = as_of or datetime.now(UTC)
+    if reference.tzinfo is None:
+        reference = reference.replace(tzinfo=UTC)
+    for shop in unique_shops:
+        is_evaluable = shop.review_count is not None or shop.transaction_sold_count is not None or shop.created_timestamp is not None
+        if not is_evaluable:
+            continue
+        evaluable += 1
+        age_days = None
+        if shop.created_timestamp is not None:
+            created_timestamp = shop.created_timestamp if shop.created_timestamp.tzinfo is not None else shop.created_timestamp.replace(tzinfo=UTC)
+            candidate_age_days = (reference - created_timestamp).total_seconds() / 86400
+            age_days = candidate_age_days if candidate_age_days >= 0 else None
+        if (
+            (shop.review_count is not None and shop.review_count <= review_threshold)
+            or (shop.transaction_sold_count is not None and shop.transaction_sold_count <= sales_threshold)
+            or (age_days is not None and age_days < young_age_days)
+        ):
+            count += 1
+    if evaluable == 0:
+        return None
+    return count
+
+
+def calculate_review_median(shops: Sequence[CanonicalShop]) -> float | None:
+    values = [shop.review_count for shop in _unique_shops(shops) if shop.review_count is not None]
+    return float(median(values)) if values else None
+
+
+def calculate_sales_median(shops: Sequence[CanonicalShop]) -> float | None:
+    values = [shop.transaction_sold_count for shop in _unique_shops(shops) if shop.transaction_sold_count is not None]
+    return float(median(values)) if values else None
+
+
+def calculate_shop_age_median_days(
+    shops: Sequence[CanonicalShop],
+    *,
+    as_of: datetime | None = None,
+) -> float | None:
+    reference = as_of or datetime.now(UTC)
+    if reference.tzinfo is None:
+        reference = reference.replace(tzinfo=UTC)
+    values: list[float] = []
+    for shop in _unique_shops(shops):
+        if shop.created_timestamp is None:
+            continue
+        created_timestamp = shop.created_timestamp if shop.created_timestamp.tzinfo is not None else shop.created_timestamp.replace(tzinfo=UTC)
+        age_days = (reference - created_timestamp).total_seconds() / 86400
+        if age_days >= 0:
+            values.append(age_days)
+    return float(median(values)) if values else None
+
+
 def _window_slice(observations: Sequence[RawObservation], window_size: int) -> list[RawObservation]:
     return _dedupe_and_sort_observations(observations)[:window_size]
 

@@ -17,7 +17,7 @@ def render_executive_summary(
     families = list(family_metrics)
     queries = list(query_metrics)
     lines = [
-        "# RQ2 - Etsy New Seller Visibility",
+        "# RQ2 - Etsy API Search Entry Signal",
         "",
         f"Run Date: {run.started_at.isoformat()}",
         f"Git SHA: {run.git_sha or 'unknown'}",
@@ -27,11 +27,11 @@ def render_executive_summary(
         f"Unique Listings: {sum(query.unique_listing_count for query in queries)}",
         f"Unique Shops: {sum(query.unique_shop_count for query in queries)}",
         "",
-        "## Verdict",
+        "## Entry Signal",
         "",
         verdict.value,
         "",
-        "## Product Ranking",
+        "## Marketplace Entry Signal Ranking",
     ]
     for index, family in enumerate(sorted(families, key=lambda item: item.entry_score.score if item.entry_score else 0, reverse=True), start=1):
         lines.append(f"{index}. {family.family}")
@@ -90,4 +90,3 @@ def build_family_summary_rows(family_metrics: Iterable[FamilyMetrics]) -> list[d
             }
         )
     return rows
-

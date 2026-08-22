@@ -2,7 +2,7 @@
 
 ## Research question
 
-Can new or low-review Etsy shops earn first-page visibility in functional digital product categories such as fee calculators, pricing calculators, bookkeeping workbooks, and seller tools?
+Can new or low-review Etsy shops appear in Etsy Open API keyword-relevance results for functional digital product categories such as fee calculators, pricing calculators, bookkeeping workbooks, and seller tools?
 
 ## Unit of observation
 
@@ -53,8 +53,7 @@ The GO / CONDITIONAL_GO / NO_GO thresholds in `config/thresholds.json` are proje
 - Etsy ranking algorithm is opaque
 - personalization and location can change visibility
 - ads and sponsored listings may distort rank
-- API rank is not the same as browser-visible SERP rank
+- API rank is not the same as browser-visible Etsy rank
 - review, sales, and freshness fields may be incomplete
 - listing visibility does not imply revenue or conversion
 - the same shop can appear multiple times and dominate the page
-

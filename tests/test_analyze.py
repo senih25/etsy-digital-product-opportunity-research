@@ -6,12 +6,21 @@ import pytest
 
 from etsy_research.analyze import (
     assign_review_cohort,
+    assign_sales_maturity_bucket,
+    assign_shop_age_bucket,
     calculate_cr10,
     calculate_cr5,
     calculate_entry_score,
+    calculate_low_review_shop_share,
+    calculate_low_sales_shop_share,
+    calculate_review_median,
     calculate_price_summary,
     calculate_rank_window_metrics,
     calculate_recent_listing_share,
+    calculate_sales_median,
+    calculate_shop_age_median_days,
+    calculate_unique_low_maturity_shop_count,
+    calculate_young_shop_share,
 )
 from etsy_research.models import CanonicalShop, RawObservation
 
@@ -21,9 +30,14 @@ def _shop(shop_id: str, review_count: int | None) -> CanonicalShop:
         shop_id=shop_id,
         shop_name=shop_id,
         review_count=review_count,
-        sales_count=review_count,
-        shop_created_at=datetime(2024, 1, 1, tzinfo=UTC),
-        active_listing_count=None,
+        review_average=None,
+        transaction_sold_count=review_count,
+        created_timestamp=datetime(2024, 1, 1, tzinfo=UTC),
+        listing_active_count=None,
+        digital_listing_count=None,
+        num_favorers=None,
+        source_endpoint="fixture",
+        retrieved_at=None,
         maturity_source="fixture",
     )
 
@@ -156,3 +170,95 @@ def test_missing_metric_handling() -> None:
     assert "top50_new_shop_penetration" in result.missing_metrics
     assert 0 < result.score < 100
 
+
+@pytest.mark.parametrize(
+    ("sold_count", "expected"),
+    [
+        (0, "0-100"),
+        (100, "0-100"),
+        (101, "101-500"),
+        (500, "101-500"),
+        (501, "501-2000"),
+        (2000, "501-2000"),
+        (2001, "2001-10000"),
+        (10000, "2001-10000"),
+        (10001, "10001+"),
+    ],
+)
+def test_assign_sales_maturity_bucket_boundaries(sold_count: int, expected: str) -> None:
+    assert assign_sales_maturity_bucket(sold_count) == expected
+
+
+@pytest.mark.parametrize(
+    ("age_days", "expected"),
+    [
+        (182, "<6 months"),
+        (183, "6-12 months"),
+        (364, "6-12 months"),
+        (365, "1-2 years"),
+        (729, "1-2 years"),
+        (730, "2-5 years"),
+        (1824, "2-5 years"),
+        (1825, "5+ years"),
+    ],
+)
+def test_assign_shop_age_bucket_boundaries(age_days: int, expected: str) -> None:
+    as_of = datetime(2026, 8, 22, tzinfo=UTC)
+    created_at = as_of - timedelta(days=age_days)
+    assert assign_shop_age_bucket(created_at, as_of=as_of) == expected
+
+
+def test_low_maturity_shares_ignore_missing_values() -> None:
+    as_of = datetime(2026, 8, 22, tzinfo=UTC)
+    shops = [
+        CanonicalShop(
+            shop_id="shop-a",
+            shop_name="shop-a",
+            review_count=50,
+            review_average=None,
+            transaction_sold_count=600,
+            created_timestamp=as_of - timedelta(days=100),
+            listing_active_count=None,
+            digital_listing_count=None,
+            num_favorers=None,
+            source_endpoint="fixture",
+            retrieved_at=None,
+            maturity_source="fixture",
+        ),
+        CanonicalShop(
+            shop_id="shop-b",
+            shop_name="shop-b",
+            review_count=150,
+            review_average=None,
+            transaction_sold_count=50,
+            created_timestamp=as_of - timedelta(days=900),
+            listing_active_count=None,
+            digital_listing_count=None,
+            num_favorers=None,
+            source_endpoint="fixture",
+            retrieved_at=None,
+            maturity_source="fixture",
+        ),
+        CanonicalShop(
+            shop_id="shop-c",
+            shop_name="shop-c",
+            review_count=None,
+            review_average=None,
+            transaction_sold_count=None,
+            created_timestamp=None,
+            listing_active_count=None,
+            digital_listing_count=None,
+            num_favorers=None,
+            source_endpoint="fixture",
+            retrieved_at=None,
+            maturity_source="fixture",
+        ),
+    ]
+
+    assert calculate_low_review_shop_share(shops) == pytest.approx(0.5)
+    assert calculate_low_sales_shop_share(shops) == pytest.approx(0.5)
+    assert calculate_young_shop_share(shops, as_of=as_of) == pytest.approx(0.5)
+    assert calculate_unique_low_maturity_shop_count(shops, as_of=as_of) == 2
+    assert calculate_review_median(shops) == 100.0
+    assert calculate_sales_median(shops) == 325.0
+    assert calculate_shop_age_median_days(shops, as_of=as_of) == 500.0
