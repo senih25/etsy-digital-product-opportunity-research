@@ -55,6 +55,11 @@ Public documentation:
 - [Security](SECURITY.md)
 - [Methodology](RESEARCH-METHODOLOGY.md)
 - [Etsy API Terms Guardrails](ETSY-API-TERMS-GUARDRAILS.md)
+- [NVIDIA cost and vendor-lock-in guardrails](docs/NVIDIA-COST-AND-VENDOR-LOCKIN-GUARDRAILS.md)
+- [NVIDIA free-tier architecture audit](research/nvidia/NVIDIA-FREE-TIER-ARCHITECTURE.md)
+- [NVIDIA cost-risk matrix](research/nvidia/NVIDIA-COST-RISK-MATRIX.md)
+- [NVIDIA human action gates](research/nvidia/NVIDIA-HUMAN-ACTION-GATES.md)
+- [NVIDIA optional provider ADR](docs/adr/ADR-NVIDIA-OPTIONAL-PROVIDER.md)
 - [Public landing page](docs/index.html)
 
 Current scope:

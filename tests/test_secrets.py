@@ -12,6 +12,17 @@ def test_env_example_placeholder_only() -> None:
     assert "ETSY_API_KEYSTRING=" in content
     assert "ETSY_SHARED_SECRET=" in content
     assert "FIRECRAWL_API_KEY=" in content
+    assert "AI_ENABLED=false" in content
+    assert "AI_PROVIDER=null" in content
+    assert "AI_MODEL=" in content
+    assert "AI_BASE_URL=" in content
+    assert "AI_API_KEY_ENV_NAME=NVIDIA_API_KEY" in content
+    assert "AI_COST_CLASS=UNKNOWN" in content
+    assert "AI_DEPENDENCY_CLASS=OPTIONAL" in content
+    assert "ALLOW_PAID_AI=false" in content
+    assert "NVIDIA_API_KEY=" in content
+    assert "NVIDIA_BASE_URL=" in content
+    assert "NVIDIA_MODEL=" in content
     assert "ETSY_API_KEY=" not in content
     assert "sk-" not in content
     assert "BEGIN PRIVATE KEY" not in content

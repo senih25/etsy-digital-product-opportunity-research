@@ -10,6 +10,7 @@ from .analyze import (
     calculate_unique_shop_penetration,
     classify_verdict,
 )
+from .ai import AIProvider, AIResult, AISettings, NullAIProvider, build_ai_provider, load_ai_settings
 from .config import load_query_config, load_threshold_config
 from .models import (
     CanonicalListing,
@@ -42,6 +43,12 @@ __all__ = [
     "calculate_unique_shop_penetration",
     "classify_capability_status",
     "classify_verdict",
+    "AIProvider",
+    "AIResult",
+    "AISettings",
+    "NullAIProvider",
+    "build_ai_provider",
+    "load_ai_settings",
     "load_query_config",
     "load_threshold_config",
     "normalize_listing_id",
