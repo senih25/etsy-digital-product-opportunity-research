@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>API Usage - Digital Product Opportunity Research</title>
+    <meta
+      name="description"
+      content="API usage summary for the Etsy digital product opportunity research repository and public landing page."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <article class="hero doc">
+        <div class="breadcrumb"><a href="index.html">Home</a> / API Usage</div>
+        <span class="eyebrow">API usage summary</span>
+        <h1>API Usage</h1>
+        <p class="subtitle">
+          Etsy Open API v3 is the primary marketplace data source for public active-listing research.
+        </p>
+
+        <section class="section">
+          <h2>Primary Endpoint</h2>
+          <p><code>findAllListingsActive</code> or the current official equivalent, using <code>GET /listings/active</code>.</p>
+        </section>
+
+        <section class="section">
+          <h2>Authentication</h2>
+          <p><code>x-api-key = keystring:shared_secret</code>. Real values are never published.</p>
+        </section>
+
+        <section class="section">
+          <h2>Current Use</h2>
+          <ul>
+            <li>public active-listing research only</li>
+            <li>no seller OAuth for the current RQ2 workflow</li>
+            <li>conservative requests</li>
+            <li>retry/backoff and Retry-After handling</li>
+            <li>no aggressive parallelism</li>
+            <li>no scraping fallback for data already available via the official API</li>
+          </ul>
+        </section>
+
+        <section class="section">
+          <h2>Reference Docs</h2>
+          <ul>
+            <li><a href="https://developers.etsy.com/documentation/essentials/requests" target="_blank" rel="noreferrer">Etsy request standards</a></li>
+            <li><a href="https://developers.etsy.com/documentation/reference" target="_blank" rel="noreferrer">Etsy API reference</a></li>
+          </ul>
+        </section>
+      </article>
+    </main>
+  </body>
+</html>
