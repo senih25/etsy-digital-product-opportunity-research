@@ -2,7 +2,7 @@
 
 Public, read-only research tooling for digital product opportunity analysis and RQ2 new-seller visibility research.
 
-This repository is the canonical source for deterministic analysis of publicly available Etsy active listings. It is not a product generator, Etsy automation bot, scraper-first system, listing publisher, dashboard, or SaaS backend.
+This repository is the canonical source for deterministic analysis of publicly available Etsy active listings through the supported Etsy Open API. It is not a product generator, Etsy automation bot, scraper-first system, listing publisher, dashboard, or SaaS backend.
 
 Current research question:
 
@@ -26,21 +26,26 @@ What this repository does not do:
 - manage shops
 - access private member data
 - use seller OAuth for the current RQ2 workflow
+- scrape or crawl Etsy.com
+- automate Etsy.com through Chrome DevTools, browser bots, screenshots, DOM extraction, or internal/private endpoints
 
-Data source priority:
+Data source policy:
 
-1. Etsy Open API v3
-2. Etsy browser validation
-3. Chrome DevTools MCP
-4. Firecrawl for external-web research only
+1. Etsy Open API v3 is the supported programmatic source for Etsy marketplace data.
+2. Automated access to Etsy.com pages is out of scope unless Etsy explicitly authorizes it.
+3. Firecrawl may be used only for non-Etsy external-web research where permitted by the target source.
+4. Chrome DevTools MCP may be used for this project's own local/testing surfaces, not to programmatically inspect or extract data from Etsy.com.
 
 Important:
 
-- API rank != user-visible Etsy SERP rank.
+- API ordering must not be represented as user-visible Etsy SERP ranking unless the official API explicitly defines it that way.
 - Live pilot is blocked until local Etsy API credentials are present.
 - `ETSY_API_KEYSTRING` and `ETSY_SHARED_SECRET` are required for live preflight and future campaign runs.
 - The Etsy `x-api-key` header is composed as `keystring:shared_secret`.
 - API credentials stay local and are never committed.
+- Live raw Etsy member content must be treated as temporary cache, not a durable research archive.
+- Durable research outputs should prefer derived aggregate metrics that do not reproduce Etsy member content.
+- All new Etsy integrations must pass the binding [Etsy API Terms Guardrails](ETSY-API-TERMS-GUARDRAILS.md) before implementation.
 
 Public documentation:
 
@@ -49,6 +54,7 @@ Public documentation:
 - [API Usage](API-USAGE.md)
 - [Security](SECURITY.md)
 - [Methodology](RESEARCH-METHODOLOGY.md)
+- [Etsy API Terms Guardrails](ETSY-API-TERMS-GUARDRAILS.md)
 - [Public landing page](docs/index.html)
 
 Current scope:
@@ -71,3 +77,11 @@ Official Etsy docs referenced by the scaffold:
 
 - [Request standards](https://developers.etsy.com/documentation/essentials/requests)
 - [API reference](https://developers.etsy.com/documentation/reference)
+
+Project contact:
+
+- `senih@senihbayankulu.com`
+
+Trademark notice:
+
+> "Etsy" is a trademark of Etsy, Inc. This application uses the Etsy API but is not endorsed or certified by Etsy, Inc.
