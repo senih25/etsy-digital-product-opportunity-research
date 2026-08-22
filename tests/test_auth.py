@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+from pathlib import Path
 from contextlib import nullcontext
 
 import pytest
@@ -9,6 +11,7 @@ from etsy_research.config import (
     detect_etsy_app_approval_state,
     detect_etsy_credential_state,
     load_etsy_credentials,
+    load_local_env,
 )
 from etsy_research.etsy_client import EtsyClient, EtsyClientError, RequestMetadata, compose_x_api_key, redact_headers
 
@@ -68,6 +71,40 @@ def test_load_credentials_returns_none_when_incomplete() -> None:
     assert load_etsy_credentials({"ETSY_SHARED_SECRET": "shared-secret"}) is None
 
 
+def _write_env_file(path: Path, *, encoding: str) -> Path:
+    path.write_text(
+        'ETSY_API_KEYSTRING="example-keystring"\n'
+        "\n"
+        "# comment line\n"
+        "ETSY_SHARED_SECRET='example-shared-secret'\n",
+        encoding=encoding,
+    )
+    return path
+
+
+def _disable_repo_env_loading(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("etsy_research.cli.load_local_env", lambda: None)
+
+
+@pytest.mark.parametrize("encoding", ["utf-8", "utf-8-sig"])
+def test_load_local_env_supports_utf8_and_bom(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    encoding: str,
+) -> None:
+    env_path = _write_env_file(tmp_path / ".env", encoding=encoding)
+
+    monkeypatch.setenv("ETSY_API_KEYSTRING", "existing-keystring")
+    monkeypatch.setenv("EXISTING_ENV_VAR", "keep-me")
+    monkeypatch.delenv("ETSY_SHARED_SECRET", raising=False)
+
+    load_local_env(env_path)
+
+    assert os.environ["ETSY_API_KEYSTRING"] == "existing-keystring"
+    assert os.environ["ETSY_SHARED_SECRET"] == "example-shared-secret"
+    assert os.environ["EXISTING_ENV_VAR"] == "keep-me"
+
+
 def test_explicit_empty_env_mapping_is_respected(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ETSY_API_KEYSTRING", "process-keystring")
     monkeypatch.setenv("ETSY_SHARED_SECRET", "process-shared-secret")
@@ -77,6 +114,7 @@ def test_explicit_empty_env_mapping_is_respected(monkeypatch: pytest.MonkeyPatch
 
 
 def test_preflight_missing_credentials(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    _disable_repo_env_loading(monkeypatch)
     monkeypatch.setenv("ETSY_APP_APPROVAL", "APPROVED")
     monkeypatch.delenv("ETSY_API_KEYSTRING", raising=False)
     monkeypatch.delenv("ETSY_SHARED_SECRET", raising=False)
@@ -89,6 +127,7 @@ def test_preflight_missing_credentials(monkeypatch: pytest.MonkeyPatch, capsys: 
 
 
 def test_preflight_missing_shared_secret(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    _disable_repo_env_loading(monkeypatch)
     monkeypatch.setenv("ETSY_APP_APPROVAL", "APPROVED")
     monkeypatch.setenv("ETSY_API_KEYSTRING", "keystring")
     monkeypatch.delenv("ETSY_SHARED_SECRET", raising=False)
@@ -101,6 +140,7 @@ def test_preflight_missing_shared_secret(monkeypatch: pytest.MonkeyPatch, capsys
 
 
 def test_preflight_missing_keystring(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    _disable_repo_env_loading(monkeypatch)
     monkeypatch.setenv("ETSY_APP_APPROVAL", "APPROVED")
     monkeypatch.delenv("ETSY_API_KEYSTRING", raising=False)
     monkeypatch.setenv("ETSY_SHARED_SECRET", "shared-secret")
@@ -113,6 +153,7 @@ def test_preflight_missing_keystring(monkeypatch: pytest.MonkeyPatch, capsys: py
 
 
 def test_preflight_app_not_approved(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    _disable_repo_env_loading(monkeypatch)
     monkeypatch.setenv("ETSY_APP_APPROVAL", "PENDING")
     monkeypatch.setenv("ETSY_API_KEYSTRING", "keystring")
     monkeypatch.setenv("ETSY_SHARED_SECRET", "shared-secret")
@@ -130,6 +171,7 @@ def test_preflight_app_not_approved(monkeypatch: pytest.MonkeyPatch, capsys: pyt
 
 
 def test_preflight_auth_failed(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    _disable_repo_env_loading(monkeypatch)
     monkeypatch.setenv("ETSY_APP_APPROVAL", "APPROVED")
     monkeypatch.setenv("ETSY_API_KEYSTRING", "keystring")
     monkeypatch.setenv("ETSY_SHARED_SECRET", "shared-secret")
@@ -147,6 +189,7 @@ def test_preflight_auth_failed(monkeypatch: pytest.MonkeyPatch, capsys: pytest.C
 
 
 def test_preflight_success(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    _disable_repo_env_loading(monkeypatch)
     monkeypatch.setenv("ETSY_APP_APPROVAL", "APPROVED")
     monkeypatch.setenv("ETSY_API_KEYSTRING", "keystring")
     monkeypatch.setenv("ETSY_SHARED_SECRET", "shared-secret")
@@ -169,6 +212,7 @@ def test_preflight_success(monkeypatch: pytest.MonkeyPatch, capsys: pytest.Captu
 
 
 def test_run_rq2_app_not_approved(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    _disable_repo_env_loading(monkeypatch)
     monkeypatch.setenv("ETSY_APP_APPROVAL", "PENDING")
     monkeypatch.setenv("ETSY_API_KEYSTRING", "keystring")
     monkeypatch.setenv("ETSY_SHARED_SECRET", "shared-secret")
