@@ -1,0 +1,9 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+.pytest_cache/
+.venv/
+research/rq2/raw/*
+!research/rq2/raw/.gitkeep
+

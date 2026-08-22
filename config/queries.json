@@ -1,0 +1,25 @@
+{
+  "version": "rq2-query-set-v1",
+  "queries": [
+    {"id": "family_a_etsy_profit_1", "family": "FAMILY_A_ETSY_PROFIT", "text": "etsy profit calculator", "enabled": true},
+    {"id": "family_a_etsy_profit_2", "family": "FAMILY_A_ETSY_PROFIT", "text": "etsy fee calculator", "enabled": true},
+    {"id": "family_a_etsy_profit_3", "family": "FAMILY_A_ETSY_PROFIT", "text": "etsy pricing calculator", "enabled": true},
+    {"id": "family_a_etsy_profit_4", "family": "FAMILY_A_ETSY_PROFIT", "text": "etsy seller profit spreadsheet", "enabled": true},
+
+    {"id": "family_b_handmade_pricing_1", "family": "FAMILY_B_HANDMADE_PRICING", "text": "handmade pricing calculator", "enabled": true},
+    {"id": "family_b_handmade_pricing_2", "family": "FAMILY_B_HANDMADE_PRICING", "text": "product pricing calculator", "enabled": true},
+    {"id": "family_b_handmade_pricing_3", "family": "FAMILY_B_HANDMADE_PRICING", "text": "handmade business spreadsheet", "enabled": true},
+    {"id": "family_b_handmade_pricing_4", "family": "FAMILY_B_HANDMADE_PRICING", "text": "batch cost calculator", "enabled": true},
+
+    {"id": "family_c_bookkeeping_1", "family": "FAMILY_C_BOOKKEEPING", "text": "etsy bookkeeping spreadsheet", "enabled": true},
+    {"id": "family_c_bookkeeping_2", "family": "FAMILY_C_BOOKKEEPING", "text": "etsy seller bookkeeping", "enabled": true},
+    {"id": "family_c_bookkeeping_3", "family": "FAMILY_C_BOOKKEEPING", "text": "small business bookkeeping spreadsheet", "enabled": true},
+    {"id": "family_c_bookkeeping_4", "family": "FAMILY_C_BOOKKEEPING", "text": "etsy accounting spreadsheet", "enabled": true},
+
+    {"id": "family_d_seller_operations_1", "family": "FAMILY_D_SELLER_OPERATIONS", "text": "small business profit calculator", "enabled": true},
+    {"id": "family_d_seller_operations_2", "family": "FAMILY_D_SELLER_OPERATIONS", "text": "small business pricing spreadsheet", "enabled": true},
+    {"id": "family_d_seller_operations_3", "family": "FAMILY_D_SELLER_OPERATIONS", "text": "etsy seller spreadsheet", "enabled": true},
+    {"id": "family_d_seller_operations_4", "family": "FAMILY_D_SELLER_OPERATIONS", "text": "etsy business tracker", "enabled": true}
+  ]
+}
+

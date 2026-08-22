@@ -1,0 +1,31 @@
+{
+  "version": "rq2-thresholds-v1",
+  "review_cohorts": [
+    {"id": "A", "min": 0, "max": 25},
+    {"id": "B", "min": 26, "max": 100},
+    {"id": "C", "min": 101, "max": 500},
+    {"id": "D", "min": 501, "max": 2000},
+    {"id": "E", "min": 2001, "max": null}
+  ],
+  "primary_entry_review_max": 100,
+  "secondary_entry_review_max": 500,
+  "rank_windows": [10, 20, 50, 100],
+  "entry_score_weights": {
+    "top20_new_shop_penetration": 35,
+    "top50_new_shop_penetration": 20,
+    "unique_new_shop_diversity": 15,
+    "recent_listing_penetration": 15,
+    "incumbency_concentration": 15
+  },
+  "go_gate": {
+    "top20_new_shop_share_min": 0.15,
+    "top50_unique_new_shops_min": 5,
+    "entry_score_min": 65
+  },
+  "no_go_gate": {
+    "top20_new_shop_share_max": 0.05,
+    "top50_unique_new_shops_max": 2,
+    "entry_score_max": 40
+  }
+}
+
