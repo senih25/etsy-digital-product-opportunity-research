@@ -25,6 +25,7 @@ from .models import (
     ResearchVerdict,
 )
 from .normalize import build_canonical_listings, build_canonical_shops, normalize_listing_id
+from .pilot import classify_capability_status, parse_active_listing_page, parse_active_listing_record, select_representative_pilot_queries
 
 __all__ = [
     "__version__",
@@ -39,6 +40,7 @@ __all__ = [
     "calculate_rank_window_metrics",
     "calculate_recent_listing_share",
     "calculate_unique_shop_penetration",
+    "classify_capability_status",
     "classify_verdict",
     "load_query_config",
     "load_threshold_config",
@@ -54,7 +56,9 @@ __all__ = [
     "RawObservation",
     "ResearchRun",
     "ResearchVerdict",
+    "parse_active_listing_page",
+    "parse_active_listing_record",
+    "select_representative_pilot_queries",
 ]
 
 __version__ = "0.1.0"
-

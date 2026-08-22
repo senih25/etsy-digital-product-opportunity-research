@@ -45,23 +45,37 @@ class RequestMetadata:
     retry_after_seconds: float | None = None
 
 
-def redact_secret_value(text: str | None, secret: str | None) -> str | None:
-    if text is None or not secret:
-        return text
-    return text.replace(secret, "[REDACTED]")
+def redact_secret_value(text: str | None, *secrets: str | None) -> str | None:
+    if text is None:
+        return None
+    redacted = text
+    for secret in secrets:
+        if secret:
+            redacted = redacted.replace(secret, "[REDACTED]")
+    return redacted
 
 
-def redact_headers(headers: dict[str, str], *, api_key: str | None = None, oauth_token: str | None = None) -> dict[str, str]:
+def redact_headers(
+    headers: dict[str, str],
+    *,
+    api_keystring: str | None = None,
+    shared_secret: str | None = None,
+    oauth_token: str | None = None,
+) -> dict[str, str]:
     redacted: dict[str, str] = {}
     for key, value in headers.items():
         lower_key = key.lower()
         if lower_key == "x-api-key":
             redacted[key] = "[REDACTED]"
-        elif lower_key == "authorization" and oauth_token:
-            redacted[key] = "Bearer [REDACTED]"
+        elif lower_key == "authorization":
+            redacted[key] = "Bearer [REDACTED]" if oauth_token else "[REDACTED]"
         else:
             redacted[key] = value
     return redacted
+
+
+def compose_x_api_key(keystring: str, shared_secret: str) -> str:
+    return f"{keystring}:{shared_secret}"
 
 
 def _parse_retry_after(value: str | None) -> float | None:
@@ -82,7 +96,8 @@ def _parse_retry_after(value: str | None) -> float | None:
 class EtsyClient:
     def __init__(
         self,
-        api_key: str,
+        keystring: str,
+        shared_secret: str,
         *,
         oauth_token: str | None = None,
         base_url: str = DEFAULT_BASE_URL,
@@ -91,7 +106,8 @@ class EtsyClient:
         backoff_factor: float = 0.5,
         user_agent: str = "etsy-digital-product-opportunity-research/0.1.0",
     ) -> None:
-        self.api_key = api_key
+        self.keystring = keystring
+        self.shared_secret = shared_secret
         self.oauth_token = oauth_token
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
@@ -103,7 +119,7 @@ class EtsyClient:
         headers = {
             "Accept": "application/json",
             "User-Agent": self.user_agent,
-            "x-api-key": self.api_key,
+            "x-api-key": compose_x_api_key(self.keystring, self.shared_secret),
         }
         if self.oauth_token:
             headers["Authorization"] = f"Bearer {self.oauth_token}"
@@ -129,7 +145,7 @@ class EtsyClient:
                     request_id = response.headers.get("x-request-id") or response.headers.get("request-id")
                     metadata = RequestMetadata(
                         method=method.upper(),
-                        url=redact_secret_value(url, self.api_key) or url,
+                        url=redact_secret_value(url, self.keystring, self.shared_secret, compose_x_api_key(self.keystring, self.shared_secret)) or url,
                         attempt=attempt,
                         timeout_seconds=self.timeout_seconds,
                         request_id=request_id,
@@ -145,7 +161,7 @@ class EtsyClient:
                     status_code=exc.code,
                     request_id=request_id,
                     retry_after_seconds=retry_after_seconds,
-                    url=redact_secret_value(url, self.api_key) or url,
+                    url=redact_secret_value(url, self.keystring, self.shared_secret, compose_x_api_key(self.keystring, self.shared_secret)) or url,
                     method=method.upper(),
                     response_text=response_text,
                 )
@@ -156,7 +172,7 @@ class EtsyClient:
             except URLError as exc:
                 last_error = EtsyClientError(
                     f"Etsy API transport failure: {exc.reason}",
-                    url=redact_secret_value(url, self.api_key) or url,
+                    url=redact_secret_value(url, self.keystring, self.shared_secret, compose_x_api_key(self.keystring, self.shared_secret)) or url,
                     method=method.upper(),
                 )
                 if attempt >= self.max_retries:
@@ -165,20 +181,33 @@ class EtsyClient:
 
         if last_error is not None:
             raise last_error
-        raise EtsyClientError("Etsy API request failed without a captured error", url=redact_secret_value(url, self.api_key) or url, method=method.upper())
+        raise EtsyClientError("Etsy API request failed without a captured error", url=redact_secret_value(url, self.keystring, self.shared_secret, compose_x_api_key(self.keystring, self.shared_secret)) or url, method=method.upper())
+
+    def find_all_listings_active(
+        self,
+        *,
+        limit: int = 100,
+        offset: int = 0,
+        keywords: str | None = None,
+        **params: Any,
+    ) -> tuple[Any, RequestMetadata]:
+        request_params = dict(params)
+        request_params.update({"limit": limit, "offset": offset})
+        if keywords is not None:
+            request_params["keywords"] = keywords
+        return self._request_json("GET", "/listings/active", params=request_params)
 
     def get_active_listings(self, **params: Any) -> tuple[Any, RequestMetadata]:
-        return self._request_json("GET", "/listings/active", params=params or None)
+        return self.find_all_listings_active(**params)
 
     def iter_active_listings(self, *, limit: int = 100, **params: Any):
         offset = 0
         while True:
             page_params = dict(params)
             page_params.update({"limit": limit, "offset": offset})
-            payload, metadata = self.get_active_listings(**page_params)
+            payload, metadata = self.find_all_listings_active(**page_params)
             yield payload, metadata
             items = payload.get("results") if isinstance(payload, dict) else None
             if not items or len(items) < limit:
                 break
             offset += limit
-

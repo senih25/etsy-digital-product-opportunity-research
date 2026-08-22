@@ -4,7 +4,7 @@ import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -90,6 +90,16 @@ class ConfigBundle:
     thresholds: ThresholdConfig
 
 
+@dataclass(frozen=True)
+class EtsyCredentials:
+    keystring: str
+    shared_secret: str
+
+    @property
+    def x_api_key(self) -> str:
+        return f"{self.keystring}:{self.shared_secret}"
+
+
 def _load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -113,3 +123,24 @@ def load_config_bundle(
         thresholds=load_threshold_config(thresholds_path),
     )
 
+
+def load_etsy_credentials(environ: Mapping[str, str] | None = None) -> EtsyCredentials | None:
+    env = os.environ if environ is None else environ
+    keystring = env.get("ETSY_API_KEYSTRING")
+    shared_secret = env.get("ETSY_SHARED_SECRET")
+    if not keystring or not shared_secret:
+        return None
+    return EtsyCredentials(keystring=keystring, shared_secret=shared_secret)
+
+
+def detect_etsy_credential_state(environ: Mapping[str, str] | None = None) -> str:
+    env = os.environ if environ is None else environ
+    keystring = env.get("ETSY_API_KEYSTRING")
+    shared_secret = env.get("ETSY_SHARED_SECRET")
+    if not keystring and not shared_secret:
+        return "BLOCKED_NO_CREDENTIALS"
+    if not keystring:
+        return "BLOCKED_MISSING_KEYSTRING"
+    if not shared_secret:
+        return "BLOCKED_MISSING_SHARED_SECRET"
+    return "READY"

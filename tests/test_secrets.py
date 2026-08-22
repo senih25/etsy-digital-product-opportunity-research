@@ -8,8 +8,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def test_env_example_placeholder_only() -> None:
     content = (ROOT / ".env.example").read_text(encoding="utf-8")
-    assert "ETSY_API_KEY=" in content
+    assert "ETSY_API_KEYSTRING=" in content
+    assert "ETSY_SHARED_SECRET=" in content
     assert "FIRECRAWL_API_KEY=" in content
+    assert "ETSY_API_KEY=" not in content
     assert "sk-" not in content
     assert "BEGIN PRIVATE KEY" not in content
 
@@ -31,4 +33,3 @@ def test_gitignore_and_fixture_safety() -> None:
         assert "sk-" not in content
         assert "xoxb-" not in content
         assert "BEGIN PRIVATE KEY" not in content
-

@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import asdict
 import json
-import os
-import sys
 from pathlib import Path
 from typing import Any
 
 from .analyze import build_query_metrics
-from .config import load_config_bundle, load_local_env
+from .config import detect_etsy_credential_state, load_config_bundle, load_etsy_credentials, load_local_env
+from .etsy_client import EtsyClient, EtsyClientError
 from .models import CanonicalShop, RawObservation
 
 
@@ -72,18 +72,38 @@ def analyze_fixture_command(path: Path) -> int:
 def preflight_command() -> int:
     load_local_env()
     bundle = load_config_bundle()
-    api_key = os.getenv("ETSY_API_KEY")
-    if not api_key:
-        print("BLOCKED_NO_ETSY_API_KEY")
+    state = detect_etsy_credential_state()
+    if state != "READY":
+        print(state)
         return 2
+
+    credentials = load_etsy_credentials()
+    assert credentials is not None
+    client = EtsyClient(credentials.keystring, credentials.shared_secret)
+    try:
+        payload, metadata = client.find_all_listings_active(limit=1, offset=0)
+    except EtsyClientError as exc:
+        response_text = (exc.response_text or "").lower()
+        if exc.status_code in {401, 403} and ("pending approval" in response_text or "not approved" in response_text):
+            print("BLOCKED_APP_NOT_APPROVED")
+            return 2
+        if exc.status_code in {401, 403}:
+            print("AUTH_FAILED")
+            return 3
+        print("AUTH_FAILED")
+        return 3
+
     payload = {
         "status": "PASS",
         "api_source": "Etsy Open API v3",
         "base_url": "https://openapi.etsy.com/v3/application",
         "endpoint": "/listings/active",
-        "auth": "x-api-key",
+        "operation": "findAllListingsActive",
+        "auth": "x-api-key = keystring:shared_secret",
         "oauth_required": False,
+        "request_metadata": asdict(metadata),
         "rank_windows": bundle.thresholds.rank_windows,
+        "results_type": type(payload).__name__,
     }
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0
@@ -91,9 +111,9 @@ def preflight_command() -> int:
 
 def run_rq2_command() -> int:
     load_local_env()
-    api_key = os.getenv("ETSY_API_KEY")
-    if not api_key:
-        print("BLOCKED_NO_ETSY_API_KEY")
+    state = detect_etsy_credential_state()
+    if state != "READY":
+        print(state)
         return 2
     print("READY_FOR_LIVE_PILOT")
     return 0

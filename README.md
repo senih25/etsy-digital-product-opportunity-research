@@ -15,7 +15,8 @@ Important:
 
 - API rank is not the same as visible Etsy SERP rank.
 - Live market verdicts require real Etsy data.
-- `ETSY_API_KEY` is required for live preflight and future campaign runs.
+- `ETSY_API_KEYSTRING` and `ETSY_SHARED_SECRET` are required for live preflight and future campaign runs.
+- The Etsy `x-api-key` header is composed as `keystring:shared_secret`.
 
 Current scope:
 
@@ -37,4 +38,3 @@ Official Etsy docs referenced by the scaffold:
 
 - [Request standards](https://developers.etsy.com/documentation/essentials/requests)
 - [API reference](https://developers.etsy.com/documentation/reference)
-
