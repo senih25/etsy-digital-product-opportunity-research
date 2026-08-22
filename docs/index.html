@@ -6,26 +6,27 @@
     <title>Digital Product Opportunity Research</title>
     <meta
       name="description"
-      content="Read-only Etsy marketplace research tool for public active listing analysis, pricing, competition, concentration, and new-seller visibility."
+      content="Read-only Etsy Open API research tool for public active listing analysis, pricing, competition, concentration, and new-seller visibility."
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <main class="page shell">
       <section class="hero">
-        <span class="eyebrow">Read-only Etsy marketplace research tool</span>
+        <span class="eyebrow">Read-only Etsy Open API research tool</span>
         <h1>Digital Product Opportunity Research</h1>
         <p class="subtitle">
-          Analyzes publicly available active Etsy listings to study pricing, competition, category concentration, and
-          new-seller visibility.
+          Analyzes publicly available active Etsy listings through the supported Etsy Open API to study pricing,
+          competition, category concentration, and new-seller visibility.
         </p>
         <div class="meta">
           <span class="chip">RQ2 new-seller visibility research</span>
-          <span class="chip">Public marketplace analysis</span>
+          <span class="chip">Official API-first</span>
           <span class="chip">Local-first outputs</span>
         </div>
         <nav class="nav" aria-label="Primary">
           <a class="button-link" href="privacy.html">Privacy</a>
+          <a class="button-link secondary" href="https://github.com/senih25/etsy-digital-product-opportunity-research/blob/main/TERMS.md" target="_blank" rel="noreferrer">Terms</a>
           <a class="button-link secondary" href="api-usage.html">API Usage</a>
           <a
             class="button-link secondary"
@@ -43,7 +44,7 @@
           <h2>Purpose</h2>
           <p>
             Read-only market research for studying public Etsy active listings in digital-product categories and
-            identifying patterns around price, competition, concentration, and new-seller visibility.
+            identifying aggregate patterns around price, competition, concentration, and new-seller visibility.
           </p>
         </article>
 
@@ -52,15 +53,15 @@
           <p>Current phase: RQ2 new-seller visibility research.</p>
           <ul class="list">
             <li>Live pilot is blocked until local Etsy API credentials are present.</li>
-            <li>API rank is not the same as user-visible Etsy SERP rank.</li>
+            <li>API ordering is not represented as user-visible Etsy SERP ranking.</li>
           </ul>
         </article>
 
         <article class="card span-7">
           <h2>What It Does</h2>
           <ul class="list">
-            <li>reads public active listing data</li>
-            <li>analyzes pricing patterns</li>
+            <li>reads public active listing data through Etsy Open API</li>
+            <li>analyzes aggregate pricing patterns</li>
             <li>measures market concentration</li>
             <li>studies new-seller visibility</li>
             <li>supports reproducible product opportunity research</li>
@@ -74,41 +75,41 @@
             <li>delete listings or place orders</li>
             <li>send messages or manage shops</li>
             <li>access private member data</li>
-            <li>collect passwords or cookies</li>
+            <li>collect passwords, cookies, or session tokens</li>
+            <li>scrape, crawl, or automate Etsy.com pages</li>
           </ul>
         </article>
 
         <article class="card span-7">
           <h2>Data &amp; Privacy</h2>
           <p>
-            Research outputs are stored locally. API credentials are kept in local environment variables and are never
-            published.
+            API credentials are kept in local environment variables and are never published. Live Etsy member content
+            is treated as temporary working data; durable outputs are designed around aggregate research metrics rather
+            than long-term member-content archives.
           </p>
         </article>
 
         <article class="card span-5">
           <h2>API Usage</h2>
-          <p>Etsy Open API v3 is the primary marketplace data source.</p>
+          <p>Etsy Open API v3 is the supported programmatic marketplace data source for this project.</p>
         </article>
 
         <article class="card span-12">
-          <h2>Public Documentation</h2>
+          <h2>Contact &amp; Policies</h2>
+          <p>Support and project questions: <a href="mailto:senih@senihbayankulu.com">senih@senihbayankulu.com</a></p>
           <div class="nav">
             <a class="button-link secondary" href="https://github.com/senih25/etsy-digital-product-opportunity-research/blob/main/PURPOSE.md" target="_blank" rel="noreferrer">Purpose</a>
             <a class="button-link secondary" href="https://github.com/senih25/etsy-digital-product-opportunity-research/blob/main/PRIVACY.md" target="_blank" rel="noreferrer">Privacy</a>
+            <a class="button-link secondary" href="https://github.com/senih25/etsy-digital-product-opportunity-research/blob/main/TERMS.md" target="_blank" rel="noreferrer">Terms</a>
             <a class="button-link secondary" href="https://github.com/senih25/etsy-digital-product-opportunity-research/blob/main/API-USAGE.md" target="_blank" rel="noreferrer">API Usage</a>
             <a class="button-link secondary" href="https://github.com/senih25/etsy-digital-product-opportunity-research/blob/main/SECURITY.md" target="_blank" rel="noreferrer">Security</a>
-            <a class="button-link secondary" href="https://github.com/senih25/etsy-digital-product-opportunity-research/blob/main/RESEARCH-METHODOLOGY.md" target="_blank" rel="noreferrer">Methodology</a>
-            <a class="button-link secondary" href="privacy.html">Privacy page</a>
-            <a class="button-link secondary" href="api-usage.html">API usage page</a>
-            <a class="button-link secondary" href="app-review-description.txt">App review description</a>
-            <a class="button-link secondary" href="etsy-app-review.md">App review package</a>
+            <a class="button-link secondary" href="https://github.com/senih25/etsy-digital-product-opportunity-research/blob/main/ETSY-API-TERMS-GUARDRAILS.md" target="_blank" rel="noreferrer">API Terms Guardrails</a>
           </div>
         </article>
       </section>
 
       <footer class="footer">
-        Independent research project. Not affiliated with or endorsed by Etsy, Inc.
+        <p>"Etsy" is a trademark of Etsy, Inc. This application uses the Etsy API but is not endorsed or certified by Etsy, Inc.</p>
       </footer>
     </main>
   </body>
