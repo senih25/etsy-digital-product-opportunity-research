@@ -37,7 +37,7 @@ Source basis: Etsy API Terms supplied and reviewed on 2026-08-22. These guardrai
 
 Required trademark notice when Etsy marks/API are referenced in the application:
 
-> "Etsy" is a trademark of Etsy, Inc. This application uses the Etsy API but is not endorsed or certified by Etsy, Inc.
+> The term "Etsy" is a trademark of Etsy, Inc. This Application uses Etsy's API, but is not endorsed or certified by Etsy.
 
 The Etsy name/logo/marks must be less prominent than the project's own identity and must not imitate Etsy's branding, signature colors, layout, or trade dress in a confusing way.
 
@@ -116,5 +116,7 @@ Decision states:
 - `TERMS_GATE=PASS`
 - `TERMS_GATE=BLOCKED`
 - `TERMS_GATE=NEEDS_ETSY_CLARIFICATION`
+
+Current state: `TERMS_GATE=NEEDS_ETSY_CLARIFICATION`. Open points awaiting Etsy's written response: retention of durable derived aggregate metrics beyond the display-freshness limits, the scope of permitted research use, and any public or commercial use of API-derived results. No live campaign, new promotion, automatic license, or visibility change follows from this state.
 
 When uncertain, choose `NEEDS_ETSY_CLARIFICATION` rather than implementing around the restriction.

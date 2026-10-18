@@ -31,6 +31,7 @@ Retention policy:
 - Product information/images displayed by an application must not be more than 6 hours older than Etsy.com.
 - Other Etsy content displayed by an application must not be more than 24 hours older than Etsy.com.
 - Prefer durable derived aggregate metrics that do not reproduce Etsy member content.
+- Retention of such aggregates beyond the 6-hour/24-hour display limits is pending Etsy's written clarification; until then keep durable outputs minimal and non-reproducing.
 - `research/rq2/raw/` remains local, gitignored, and must have an expiry/deletion control before the live campaign begins.
 
 Attribution and member-content policy:

@@ -44,8 +44,9 @@ Important:
 - The Etsy `x-api-key` header is composed as `keystring:shared_secret`.
 - API credentials stay local and are never committed.
 - Live raw Etsy member content must be treated as temporary cache, not a durable research archive.
-- Durable research outputs should prefer derived aggregate metrics that do not reproduce Etsy member content.
+- Durable research outputs should prefer derived aggregate metrics that do not reproduce Etsy member content. Whether such aggregates may be retained beyond Etsy's display-freshness limits is pending Etsy's written clarification.
 - All new Etsy integrations must pass the binding [Etsy API Terms Guardrails](ETSY-API-TERMS-GUARDRAILS.md) before implementation.
+- Current Etsy terms gate: `TERMS_GATE=NEEDS_ETSY_CLARIFICATION`. Written clarification from Etsy is pending. Until it is received, this project does not claim Etsy permission, partnership or endorsement, and no new public promotion, Etsy-content display or retention expansion is authorized.
 
 Public documentation:
 
@@ -89,4 +90,4 @@ Project contact:
 
 Trademark notice:
 
-> "Etsy" is a trademark of Etsy, Inc. This application uses the Etsy API but is not endorsed or certified by Etsy, Inc.
+> The term "Etsy" is a trademark of Etsy, Inc. This Application uses Etsy's API, but is not endorsed or certified by Etsy.
