@@ -2,7 +2,7 @@
 
 Last updated: 2026-08-22
 
-Digital Product Opportunity Research is a read-only research project that uses supported public Etsy Open API access to analyze aggregate marketplace patterns.
+Digital Product Opportunity Research is a read-only research project that uses the supported Etsy Open API, subject to Etsy's API Terms and to pending written clarification from Etsy, to analyze aggregate marketplace patterns.
 
 ## Permitted use
 
@@ -24,6 +24,10 @@ Do not use this project to bypass Etsy technical restrictions, scrape or crawl E
 
 Contact: `senih@senihbayankulu.com`
 
+## Pending Etsy clarification
+
+Current terms gate: `TERMS_GATE=NEEDS_ETSY_CLARIFICATION`. Written clarification from Etsy is pending. Until Etsy responds, this project makes no claim of Etsy permission, partnership, certification or endorsement, and does not extend retention or public use of Etsy-derived data beyond the limits in the project guardrails (product information/images: 6 hours; other Etsy content: 24 hours).
+
 ## Etsy trademark notice
 
-> "Etsy" is a trademark of Etsy, Inc. This application uses the Etsy API but is not endorsed or certified by Etsy, Inc.
+> The term "Etsy" is a trademark of Etsy, Inc. This Application uses Etsy's API, but is not endorsed or certified by Etsy.
